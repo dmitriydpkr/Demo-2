@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}
+    HOME PAGE
+{% endblock %}
+
+
+
+{% block page %}
+
+<br/>
+<a href="{% url 'authapp-logout' %}">LOGOUT</a>
+
+
+
+    <h1>INDEX HTML</h1>
+
+{% for good in list_goods %}
+    <div>
+
+        {% if good.images %}
+            <img src="{{good.images.url }}" alt="{{good.name}}">
+        {% endif%}
+
+        <h2><a href="{% url 'good-detail' good_id=good.id %}">{{good.name}}</a></h2>
+
+            <ul>
+        <li>{{ good.price }} {{ good.brand }} </li>
+            </ul>
+
+
+    </div>
+{% endfor %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% endblock %}

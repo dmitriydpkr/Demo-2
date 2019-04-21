@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Товар {{good.name }}
+
+{% endblock %}
+
+
+
+
+{% block page %}
+
+
+
+<a href="{% url 'home' %}"><h1>Главная</h1></a>
+    <div>
+        {% if good.images %}
+            <img src="{{good.images.url }}" alt="{{good.name}}">
+        {% endif%}
+        <h3>{{ good.name }} </h3>
+    </div>
+
+<li>Price - {{ good.price }} </li>
+<li>Бренд - {{ good.brand }} </li>
+<br/>
+    Overview:
+    <li>{{ good.overview }} </li>
+
+</br></br></br></br>
+
+<h2>Заказ</h2>
+{% if sent %}
+<h2>Thank you for order</h2>
+{% endif %}
+
+<form method="POST">
+    {%csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Send order">
+
+</form>
+
+
+
+
+{% endblock %}
+
