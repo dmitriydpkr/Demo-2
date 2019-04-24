@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, re_path,reverse_lazy, include
 from main_app import views
-from validform_app import views as validview
+
 from auth_app import views as authview
 from django.conf.urls.static import static
 from django.conf import settings
@@ -27,9 +27,9 @@ from django.contrib.auth.views import LoginView, LogoutView
 urlpatterns = [
     path('admin/', admin.site.urls),
     # path('', views.get_index, name='index'),
+    path('test/', views.home, name='home'),
     path('', authview.home, name='home'),
     re_path(r'^(?P<good_id>\d+)/$', views.good_detail, name='good-detail'),
-    re_path(r'formpage/', validview.from_page, name='form-page'),
     re_path(r'authapp/login/$', LoginView.as_view(template_name='auth_app/login.html',
                                                   redirect_field_name=authview.auth_home), name='authapp-login'),
     re_path(r'authapp/$', authview.auth_home, name='auth_home'),

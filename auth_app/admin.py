@@ -1,4 +1,9 @@
 from django.contrib import admin
-# from main_app.models import Order,Good
+from .models import Comment
 
-# admin.site.register(Good)
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ['good', 'date', 'comment_overview']
+
+

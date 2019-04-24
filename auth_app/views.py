@@ -13,7 +13,7 @@ def home(request):
 
 @login_required(login_url='/authapp/login/')  # перенаправит на эту страницу для входа
 def auth_home(request):
-    list_goods = Good.objects.all()
+    list_goods = Good.objects.all()[:6]
     return render(request, 'main_app/index.html', {
         'list_goods': list_goods
     })

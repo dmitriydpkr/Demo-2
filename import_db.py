@@ -2,51 +2,57 @@ import psycopg2
 import json
 import requests
 import os
+from datetime import date
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+absolute_path_json = BASE_DIR + '/exams2/sites5.json'
+
+t = 1   # 1 = таблица товаров
 
 
 def get_json():
-
-    file_name = BASE_DIR + '/exams2/ParserJson.txt'
-
-    with open(file_name) as json_file:
+    with open(absolute_path_json) as json_file:
         json_str = json.load(json_file)
-
     return json_str
 
 
+def store_good_image(url_image, id_product):
+    absolute_path_media = BASE_DIR + '/exams2/media/good_images/'
+    r = requests.get(url_image)
+    with open(absolute_path_media + id_product+'.jpg', 'wb') as f:
+        f.write(r.content)
+    return id_product
+
+
 def get_json_data(i):
-    product_id_field = i['og:product_id']
-    type_good_field = i['og:type']
+
     category_field = i['category']
     overview_field = i['overview']
-    if i['og:title']:
-        name_field = str(i['og:title'])
-    else:
-        name_field = 'na'
-    if i['og:price:currency']:
-        currency_field = i['og:price:currency']
-    else:
-        currency_field = 'na'
+    product_id_field = i['og:product_id']
+    availability_field = str(i['og:availability'])
+    average_rating_field = float(i['og:rating'])
+    standard_price_field = float(i['og:standard_price'].replace(',', ''))
+    reviews_field = int(i['og:rating_count'])
+    rating_scale_field = float(i['og:rating_scale'])
+    date_field = date.today()
     provider_name = i['og:provider_name']
     brand = i['og:brand']
     price_field = float(i['og:price:amount'].replace(',', ''))
-    photo = 'good_images/' + i['og:product_id']+'.jpg'
+    photo = 'good_images/' + i['og:product_id'] + '.jpg'
+    name_field = str(i['og:title'])
+    currency_field = i['og:price:currency']
+    store_good_image(i['og:images'], i['og:product_id'])
 
-    absolute_path_media = BASE_DIR + '/exams2/media/good_images/'
-    r = requests.get(i['og:images'])
-
-    with open(absolute_path_media + i['og:product_id']+'.jpg', 'wb') as f:
-        f.write(r.content)
-
-    return product_id_field, type_good_field, category_field, overview_field, currency_field, name_field, \
-        provider_name, brand, price_field, photo
+    if t == 1:
+        return product_id_field, category_field, overview_field, currency_field, name_field, \
+             provider_name, brand, price_field, photo
+    else:
+        return average_rating_field, reviews_field, rating_scale_field, price_field, availability_field,\
+            standard_price_field, product_id_field, date_field
 
 
-def import_to_db():
-
-    global connection, cursor, connection
+def test_connection():
+    global connection, cursor
     try:
         connection = psycopg2.connect(user="ukrainer",
                                       password="ze2019",
@@ -54,21 +60,60 @@ def import_to_db():
                                       port="5432",
                                       database="godds_db")
         cursor = connection.cursor()
-        postgres_insert_query = """ INSERT INTO public.main_app_good (product_id, type_good, category, overview,
-        currency, name, provider_name, brand, price, images) 
-                                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+        print('Connection success')
+        return cursor
+    except (Exception, psycopg2.Error) as error:
+        print(error)
+
+
+def import_to_db():
+    if t == 1:
+        table = 'main_app_good'
+        fields = "product_id, category, overview, currency, name, provider_name, brand, price, images"
+    else:
+        table = 'main_app_goodpricerating'
+        fields = "average_rating, reviews, rating_scale, price, availability, standard_price, product_id, date"
+    counter = fields.count(',')
+    global connection, cursor
+    try:
+        cursor = test_connection()
+
+        postgres_insert_query = " INSERT INTO public." + table + " (" + fields + ")  VALUES (" + '%s,'*counter + '%s)'
+
         count = 0
-        for ix in get_json():
-            record_to_insert = (get_json_data(ix))
+        for row in get_json():
+            record_to_insert = (get_json_data(row))
             cursor.execute(postgres_insert_query, record_to_insert)
             connection.commit()
             count += 1
-            print(count)
-        print(count, "Record inserted successfully into public.main_app_good table")
+
+        print(count, "Record inserted successfully into table")
     except (Exception, psycopg2.Error) as error:
         if connection:
+            print("Failed to insert record into table", error)
+    finally:
+        # closing database connection.
+        if connection:
+            cursor.close()
+            connection.close()
+            print("PostgreSQL connection is closed")
 
-            print("Failed to insert record into public.main_app_good table", error)
+
+def update_table(field_search, value_search, field_update, value_set):
+    table = 'main_app_good'
+
+    global connection, cursor
+    try:
+        cursor = test_connection()
+        sql_update_query = "Update public." + table + " set " + field_update + " = %s where " + field_search + " = %s"
+        cursor.execute(sql_update_query, (value_set, value_search))
+        connection.commit()
+        count = cursor.rowcount
+        print(count, "Record Updated successfully ")
+
+    except (Exception, psycopg2.Error) as error:
+        print("Error in update operation", error)
+
     finally:
         # closing database connection.
         if connection:
@@ -78,4 +123,15 @@ def import_to_db():
 
 
 import_to_db()
+# update_table('product_id', '938', 'name', 'fdssdfsda')
+
+'''
+for row in get_json():
+    search_field = 'product_id'
+    value_field = row['og:product_id']
+    search_update = 'price'
+    value_update = float(row['og:price:amount'].replace(',', ''))
+    update_table(search_field, value_field, search_update, value_update)
+
+'''
 
