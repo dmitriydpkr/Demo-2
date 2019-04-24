@@ -4,20 +4,25 @@ import requests
 import os
 from datetime import date
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-absolute_path_json = BASE_DIR + '/exams2/sites5.json'
 
-t = 1   # 1 = таблица товаров
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+absolute_path_json = BASE_DIR + '/exams2/media/json/parser_raw.json'
+absolute_path_media = BASE_DIR + '/exams2/media/good_images/'
 
 
 def get_json():
+    unique_rows, output = [], []
     with open(absolute_path_json) as json_file:
         json_str = json.load(json_file)
-    return json_str
+        for item in json_str:
+            if item['og:product_id'] not in output:
+                output.append(item['og:product_id'])
+                unique_rows.append(item)
+    return unique_rows
 
 
 def store_good_image(url_image, id_product):
-    absolute_path_media = BASE_DIR + '/exams2/media/good_images/'
     r = requests.get(url_image)
     with open(absolute_path_media + id_product+'.jpg', 'wb') as f:
         f.write(r.content)
@@ -25,7 +30,7 @@ def store_good_image(url_image, id_product):
 
 
 def get_json_data(i):
-
+    t = 1  # 1 = таблица товаров
     category_field = i['category']
     overview_field = i['overview']
     product_id_field = i['og:product_id']
@@ -42,13 +47,24 @@ def get_json_data(i):
     name_field = str(i['og:title'])
     currency_field = i['og:price:currency']
     store_good_image(i['og:images'], i['og:product_id'])
-
     if t == 1:
-        return product_id_field, category_field, overview_field, currency_field, name_field, \
-             provider_name, brand, price_field, photo
+        store_good_image(i['og:images'], i['og:product_id'])
+        return product_id_field, category_field, overview_field, currency_field, name_field,provider_name, brand, \
+            price_field, photo
     else:
-        return average_rating_field, reviews_field, rating_scale_field, price_field, availability_field,\
+        dict_array = get_dictionary_id_from_db()
+        good_id_field = dict_array[product_id_field]
+        return good_id_field, average_rating_field, reviews_field, rating_scale_field, price_field, availability_field,\
             standard_price_field, product_id_field, date_field
+
+
+def update_price_list():
+    for row in get_json():
+        search_field = 'product_id'
+        value_field = row['og:product_id']
+        search_update = 'price'
+        value_update = float(row['og:price:amount'].replace(',', ''))
+        update_table(search_field, value_field, search_update, value_update)
 
 
 def test_connection():
@@ -66,53 +82,53 @@ def test_connection():
         print(error)
 
 
-def import_to_db():
-    if t == 1:
-        table = 'main_app_good'
-        fields = "product_id, category, overview, currency, name, provider_name, brand, price, images"
-    else:
-        table = 'main_app_goodpricerating'
-        fields = "average_rating, reviews, rating_scale, price, availability, standard_price, product_id, date"
+def get_dictionary_id_from_db():
+    query_set = select_db('main_app_good', "id, product_id")
+    dict_id = {}
+    for item in query_set:
+        dict_id.update({item[1]: item[0]})
+    return dict_id
+
+
+def select_db(table, fields):
+    sql_query = "select " + fields + " from public." + table
+    cursor.execute(sql_query)
+    items = cursor.fetchall()
+    return items
+
+
+def insert_db(table, fields):
     counter = fields.count(',')
-    global connection, cursor
-    try:
-        cursor = test_connection()
-
-        postgres_insert_query = " INSERT INTO public." + table + " (" + fields + ")  VALUES (" + '%s,'*counter + '%s)'
-
-        count = 0
-        for row in get_json():
-            record_to_insert = (get_json_data(row))
-            cursor.execute(postgres_insert_query, record_to_insert)
-            connection.commit()
-            count += 1
-
-        print(count, "Record inserted successfully into table")
-    except (Exception, psycopg2.Error) as error:
-        if connection:
-            print("Failed to insert record into table", error)
-    finally:
-        # closing database connection.
-        if connection:
-            cursor.close()
-            connection.close()
-            print("PostgreSQL connection is closed")
+    sql_query = " INSERT INTO public." + table + " (" + fields + ")  VALUES (" + '%s,'*counter + '%s)'
+    count = 0
+    for row in get_json():
+        record_to_insert = (get_json_data(row))
+        cursor.execute(sql_query, record_to_insert)
+        connection.commit()
+        count += 1
+    return f'{count}, "Record inserted successfully into table'
 
 
 def update_table(field_search, value_search, field_update, value_set):
     table = 'main_app_good'
+    sql_update_query = "Update public." + table + " set " + field_update + " = %s where " + field_search + " = %s"
+    cursor.execute(sql_update_query, (value_set, value_search))
+    connection.commit()
+    return f'Rows update: {cursor.rowcount}'
 
-    global connection, cursor
+
+def main():
+
+    test_connection()
+
     try:
-        cursor = test_connection()
-        sql_update_query = "Update public." + table + " set " + field_update + " = %s where " + field_search + " = %s"
-        cursor.execute(sql_update_query, (value_set, value_search))
-        connection.commit()
-        count = cursor.rowcount
-        print(count, "Record Updated successfully ")
+        table1 = 'main_app_good'
+        fields1 = "product_id, category, overview, currency, name, provider_name, brand, price, images"
+        insert_db(table1, fields1)
 
     except (Exception, psycopg2.Error) as error:
-        print("Error in update operation", error)
+        if connection:
+            print("Failed to insert record into table", error)
 
     finally:
         # closing database connection.
@@ -122,16 +138,53 @@ def update_table(field_search, value_search, field_update, value_set):
             print("PostgreSQL connection is closed")
 
 
-import_to_db()
-# update_table('product_id', '938', 'name', 'fdssdfsda')
+if __name__ == '__main__':
+    main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 '''
-for row in get_json():
-    search_field = 'product_id'
-    value_field = row['og:product_id']
-    search_update = 'price'
-    value_update = float(row['og:price:amount'].replace(',', ''))
-    update_table(search_field, value_field, search_update, value_update)
+table1 = 'main_app_good'
+fields1 = "product_id, category, overview, currency, name, provider_name, brand, price, images"
+test_connection()
+insert_db(table1, fields1)
 
+
+
+table2 = 'main_app_goodpricerating'
+fields2 = "good_id, average_rating, reviews, rating_scale, price, availability, standard_price, product_id, date"
+test_connection()
+insert_db(table1, fields1)    
+    
+    
+    
+# insert_db(table1, fields1)
+        # insert_db(table2, fields2)
+        update_table('id', '4050', 'price', '25')    
+    
+    
+table2 = 'main_app_goodpricerating'
+fields2 = "good_id, average_rating, reviews, rating_scale, price, availability, standard_price, product_id, date"
+
+
+ update_table('id', '4050', 'price', '25')
+
+
+
+ update_price_list()
+ 
 '''
 

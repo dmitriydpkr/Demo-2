@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, HttpResponse, get_object_or_404
-from .models import Good, Order
+from .models import Good, Order, GoodPriceRating
 from django.template import loader
 
 from .forms import OrderForm
@@ -16,7 +16,7 @@ def home(request):
 def good_detail(request, good_id):
 
     good = get_object_or_404(Good, id=good_id)
-    list_order = Order.objects.all()[:6]
+    list_order = Order.objects.all()[:8]
 
     form = OrderForm(request.POST or None, initial={  # данные, корорые будут переданы форме
         'good': good

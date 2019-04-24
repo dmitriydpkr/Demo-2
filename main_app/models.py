@@ -1,9 +1,7 @@
 from django.db import models
-from datetime import datetime, date, time
 
 
 class Good(models.Model):
-    product_id = models.CharField(max_length=30, verbose_name='ID_Good')
     name = models.CharField(max_length=300, verbose_name='Name', default='na')
     price = models.FloatField(default=0, verbose_name='Price')
     brand = models.CharField(max_length=30, verbose_name='Brand', blank=True)
@@ -12,6 +10,7 @@ class Good(models.Model):
     currency = models.CharField(max_length=30, verbose_name='Currency', blank=True)
     overview = models.TextField(verbose_name='Overview', default='na')
     category = models.CharField(max_length=30, verbose_name='Category', default='')
+    product_id = models.CharField(max_length=30, unique=True, verbose_name='Product_ID')
 
     def __str__(self):
         return self.name
@@ -36,8 +35,7 @@ class GoodCategoryGroup(models.Model):
 
 
 class GoodPriceRating(models.Model):
-    product_id = models.CharField(max_length=30, verbose_name='ID_Good', default='na')
-    # good = models.ForeignKey(Good, verbose_name='Price', on_delete=models.CASCADE, default=0)
+    good = models.ForeignKey(Good, verbose_name='Good ID', on_delete=models.CASCADE, default=0)
     average_rating = models.FloatField(default=0, verbose_name='Rating')
     reviews = models.IntegerField(verbose_name='Count Reviews')
     rating_scale = models.FloatField(default=0, verbose_name='Rating Scale')
@@ -45,6 +43,7 @@ class GoodPriceRating(models.Model):
     availability = models.CharField(max_length=30, verbose_name='Availability')
     standard_price = models.FloatField(default=0, verbose_name='Price Without Actions')
     date = models.DateField(verbose_name='UpdateValue', default='2001-10-25')
+    product_id = models.CharField(max_length=30, verbose_name='Product_ID', default='na')
 
     class Meta:
         verbose_name = 'PriceRating'
@@ -63,10 +62,10 @@ class Order(models.Model):
     date = models.DateTimeField(auto_now_add=True, verbose_name='Date Order')
     email = models.EmailField(max_length=70,blank=True, verbose_name='Email')
     text = models.CharField(max_length=200, verbose_name='Text Order', default='')
-    status = models.CharField(max_length=30, verbose_name='Status', default=False)
+    status = models.CharField(max_length=30, verbose_name='Status', default='open')
 
     def __str__(self):
-        return self.good
+        return self.name
 
     class Meta:
         verbose_name = 'Order'
