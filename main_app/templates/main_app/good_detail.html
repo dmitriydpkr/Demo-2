@@ -7,11 +7,11 @@
 
 
 
-{% block page %}
+{% block content %}
 
 
 
-<a href="{% url 'home' %}"><h2>Главная</h2></a>
+<a href="{% url 'home' %}"><h2>Home</h2></a>
 
 
 
@@ -26,6 +26,11 @@
     <li>Brand - {{ good.brand }} </li>
     <li>Category - {{ good.category }} </li>
 
+    <li>Count Reviews - {{ goodpricerating.reviews }} </li>
+    <li>Availability - {{ goodpricerating.availability }} </li>
+    <li>Average_rating - {{ goodpricerating.category }} </li>
+
+
 </h3>
 <br/>
 
@@ -36,6 +41,25 @@
 </h3>
 
 </br></br></br></br>
+
+
+       <div>
+           <h2> {{ goodpricerating.reviews }} </h2>
+
+
+       </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

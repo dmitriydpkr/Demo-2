@@ -10,6 +10,7 @@ class OrderForm(forms.ModelForm):
     verify_email = forms.EmailField(label='Enter your email again !')
     text = forms.CharField(widget=forms.Textarea,
                            validators=[validators.MaxLengthValidator(200)])
+    volume = forms.IntegerField(min_value=0)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -24,6 +25,6 @@ class OrderForm(forms.ModelForm):
 
     class Meta:
         model = Order
-        fields = ('good', 'name', 'phone', 'email', 'text')
-    fields_order = ['good', 'name', 'phone', 'email', 'text']
+        fields = ('good', 'volume', 'name', 'phone', 'email', 'text')
+    fields_order = ['good', 'volume', 'name', 'phone', 'email', 'text']
 

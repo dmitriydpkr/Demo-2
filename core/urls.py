@@ -14,13 +14,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, re_path,reverse_lazy, include
+from django.urls import path, re_path, reverse_lazy, include
 from main_app import views
 
 from auth_app import views as authview
 from django.conf.urls.static import static
 from django.conf import settings
-from django.contrib.auth import views as auth_views
+
 from django.contrib.auth.views import LoginView, LogoutView
 
 
@@ -33,8 +33,9 @@ urlpatterns = [
     re_path(r'authapp/login/$', LoginView.as_view(template_name='auth_app/login.html',
                                                   redirect_field_name=authview.auth_home), name='authapp-login'),
     re_path(r'authapp/$', authview.auth_home, name='auth_home'),
-    re_path(r'^authapp/logout/$',LogoutView.as_view(next_page=reverse_lazy('authapp-login')), name='authapp-logout'),
+    re_path(r'^authapp/logout/$', LogoutView.as_view(next_page=reverse_lazy('authapp-login')), name='authapp-logout'),
     re_path(r'^authapp/sign-up/', authview.authapp_sign_up, name='authapp-sign-up'),
+    path('filter/<int:pk>', views.category_filter, name="category-filter"),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

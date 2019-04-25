@@ -63,6 +63,7 @@ class Order(models.Model):
     email = models.EmailField(max_length=70,blank=True, verbose_name='Email')
     text = models.CharField(max_length=200, verbose_name='Text Order', default='')
     status = models.CharField(max_length=30, verbose_name='Status', default='open')
+    volume = models.IntegerField(verbose_name='Stick', default=0)
 
     def __str__(self):
         return self.name

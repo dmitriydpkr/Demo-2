@@ -30,7 +30,7 @@ def store_good_image(url_image, id_product):
 
 
 def get_json_data(i):
-    t = 1  # 1 = таблица товаров
+    t = 2  # 1 = таблица товаров
     category_field = i['category']
     overview_field = i['overview']
     product_id_field = i['og:product_id']
@@ -118,13 +118,11 @@ def update_table(field_search, value_search, field_update, value_set):
 
 
 def main():
-
     test_connection()
-
     try:
-        table1 = 'main_app_good'
-        fields1 = "product_id, category, overview, currency, name, provider_name, brand, price, images"
-        insert_db(table1, fields1)
+        table2 = 'main_app_goodpricerating'
+        fields2 = "good_id, average_rating, reviews, rating_scale, price, availability, standard_price, product_id,date"
+        insert_db(table2, fields2)
 
     except (Exception, psycopg2.Error) as error:
         if connection:
@@ -140,6 +138,21 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

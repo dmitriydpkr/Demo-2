@@ -14,14 +14,12 @@ def home(request):
 
 
 def good_detail(request, good_id):
-
     good = get_object_or_404(Good, id=good_id)
-    list_order = Order.objects.all()[:8]
 
+    goodpricerating = GoodPriceRating.objects.filter(good_id=good_id)
     form = OrderForm(request.POST or None, initial={  # данные, корорые будут переданы форме
         'good': good
     })
-
     if request.method == 'POST':
 
         if form.is_valid():
@@ -33,7 +31,21 @@ def good_detail(request, good_id):
         'good': good,
         'form': form,
         'sent': request.GET.get('sent', False),  # передаем в шаблон false в редирект,
-        'list_order': list_order
+        'goodpricerating': goodpricerating
 
     })
+
+
+def category_filter(request, pk):
+    goods = Good.objects.all()
+    if pk == 1:
+        goods = Good.objects.all().filter(category='Sports')
+    elif pk == 2:
+        goods = Good.objects.all().filter(category='ChildrensHealth')
+    elif pk == 3:
+        goods = Good.objects.all().filter(category='Others')
+    elif pk == 4:
+        goods = Good.objects.all()
+
+    return render(request, "main_app/category_list.html", {"goods": goods})
 

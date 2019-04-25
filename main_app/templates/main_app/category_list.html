@@ -5,6 +5,10 @@
 {% endblock %}
 
 {% block content %}
+{% block search %}
+
+{% endblock search %}
+
 
 <style>
       .example_main_div div {
@@ -22,20 +26,17 @@
       }
     </style>
 
-<br/>
-<a href="{% url 'authapp-logout' %}">LOGOUT</a>
-<p></p> <p>Category:</p>
-     <a href="{% url 'category-filter' pk=1 %}"><button>Sports</button></a>
-     <a href="{% url 'category-filter' pk=2 %}"><button>Herbs</button></a>
-     <a href="{% url 'category-filter' pk=3 %}"><button>Other</button></a>
-
-
-
-
+<a href="{% url 'home' %}"><h2>Home</h2></a>
+<a href="{% url 'authapp-logout' %}">LOGOUT</a><br/><br/>
+    CATEGORY -
+    <a href="{% url 'category-filter' pk=1 %}"><button>Sports</button></a>
+    <a href="{% url 'category-filter' pk=2 %}"><button>Herbs</button></a>
+    <a href="{% url 'category-filter' pk=3 %}"><button>Other</button></a>
+     <a href="{% url 'category-filter' pk=4 %}"><button>Turn off</button></a>
    <br/>
-    <a href="{% url 'home' %}"><h2>Home</h2></a>
 
-{% for good in list_goods %}
+
+{% for good in goods %}
     <div>
 
         {% if good.images %}
